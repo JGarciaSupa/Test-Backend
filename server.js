@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { initializeApp, cert } = require('firebase-admin/app');
@@ -6,16 +7,24 @@ const fs = require('fs');
 
 let firebaseInitialized = false;
 try {
-    // Si no existe, esto lanzará un error que será atrapado por el catch
-    const serviceAccount = require('./serviceAccountKey.json');
+    let serviceAccount;
+
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+        // En Producción (Dokploy): Leemos el JSON desde la variable de entorno
+        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    } else {
+        // En Desarrollo Local: Leemos desde el archivo físico
+        serviceAccount = require('./serviceAccountKey.json');
+    }
+
     initializeApp({
         credential: cert(serviceAccount)
     });
     firebaseInitialized = true;
     console.log("Firebase Admin inicializado correctamente.");
 } catch (error) {
-    console.error("Detalle de error:", error);
-    console.warn("ADVERTENCIA: No se pudo inicializar Firebase. Asegúrate de colocar el archivo 'serviceAccountKey.json' en la raíz del proyecto.");
+    console.error("Detalle de error al iniciar Firebase:", error.message);
+    console.warn("ADVERTENCIA: No se pudo inicializar Firebase. Faltan las credenciales en la variable ENV o en el archivo físico.");
 }
 
 const app = express();
