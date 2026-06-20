@@ -5,7 +5,7 @@ const app = express();
 const PORT = process.env.PORT || 4055;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); //
 
 // Default route to check if backend is running
 app.get('/', (req, res) => {
