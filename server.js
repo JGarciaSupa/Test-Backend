@@ -49,6 +49,14 @@ app.get('/', (req, res) => {
     });
 });
 
+// Obtener lista de usuarios conectados (para el dashboard web)
+app.get('/users', (req, res) => {
+    return res.status(200).json({
+        success: true,
+        users: Object.keys(userTokens)
+    });
+});
+
 // Login route
 app.post('/login', (req, res) => {
     const { user, pass } = req.body;

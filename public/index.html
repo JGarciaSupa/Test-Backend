@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enviar Mensaje Push - Admin</title>
+    <title>Dashboard Push - Admin</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -20,7 +20,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
         }
         h2 {
             margin-top: 0;
@@ -35,7 +35,7 @@
             color: #666;
             font-weight: bold;
         }
-        input[type="text"], textarea {
+        input[type="text"], textarea, select {
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
@@ -82,12 +82,32 @@
             color: #721c24;
             display: block;
         }
+        .refresh-btn {
+            background-color: transparent;
+            border: 1px solid #007bff;
+            color: #007bff;
+            padding: 4px 8px;
+            font-size: 12px;
+            margin-top: 5px;
+            width: auto;
+            display: inline-block;
+        }
+        .refresh-btn:hover {
+            background-color: #e9f2ff;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Notificación Global</h2>
+    <h2>FCM Dashboard</h2>
+    <div class="form-group">
+        <label for="target">Destinatario</label>
+        <select id="target">
+            <option value="global">Todos (Tema: global)</option>
+        </select>
+        <button class="refresh-btn" id="refreshBtn">🔄 Refrescar dispositivos conectados</button>
+    </div>
     <div class="form-group">
         <label for="title">Título del mensaje</label>
         <input type="text" id="title" placeholder="Ej: Nueva actualización" required>
@@ -96,12 +116,43 @@
         <label for="body">Cuerpo del mensaje</label>
         <textarea id="body" placeholder="Escribe el mensaje aquí..." required></textarea>
     </div>
-    <button id="sendBtn">Send Message</button>
+    <button id="sendBtn">Enviar Notificación</button>
     <div id="statusMsg" class="status"></div>
 </div>
 
 <script>
+    const targetSelect = document.getElementById('target');
+    const refreshBtn = document.getElementById('refreshBtn');
+    
+    // Función para cargar los usuarios conectados desde el servidor
+    async function loadUsers() {
+        try {
+            const response = await fetch('/users');
+            const data = await response.json();
+            
+            // Guardar opción global
+            targetSelect.innerHTML = '<option value="global">Todos (Tema: global)</option>';
+            
+            if (data.success && data.users && data.users.length > 0) {
+                data.users.forEach(userId => {
+                    const option = document.createElement('option');
+                    option.value = userId;
+                    option.textContent = `Usuario individual: ${userId}`;
+                    targetSelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error("Error al cargar usuarios:", error);
+        }
+    }
+
+    refreshBtn.addEventListener('click', loadUsers);
+    
+    // Cargar usuarios al inicio
+    loadUsers();
+
     document.getElementById('sendBtn').addEventListener('click', async () => {
+        const target = targetSelect.value;
         const title = document.getElementById('title').value.trim();
         const body = document.getElementById('body').value.trim();
         const statusMsg = document.getElementById('statusMsg');
@@ -109,7 +160,7 @@
 
         if (!title || !body) {
             statusMsg.className = 'status error';
-            statusMsg.textContent = 'Por favor, llena ambos campos.';
+            statusMsg.textContent = 'Por favor, llena título y cuerpo.';
             return;
         }
 
@@ -118,17 +169,28 @@
         statusMsg.className = 'status'; // hide
 
         try {
-            const response = await fetch('/send-message', {
+            let endpoint = '';
+            let payload = {};
+
+            if (target === 'global') {
+                endpoint = '/send-message';
+                payload = { title, body };
+            } else {
+                endpoint = '/send-to-user';
+                payload = { userId: target, title, body };
+            }
+
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, body })
+                body: JSON.stringify(payload)
             });
 
             const data = await response.json();
 
             if (response.ok && data.success) {
                 statusMsg.className = 'status success';
-                statusMsg.textContent = '¡Mensaje enviado exitosamente!';
+                statusMsg.textContent = target === 'global' ? '¡Mensaje global enviado exitosamente!' : `¡Mensaje enviado exitosamente al usuario ${target}!`;
                 document.getElementById('title').value = '';
                 document.getElementById('body').value = '';
             } else {
@@ -140,7 +202,7 @@
             statusMsg.textContent = 'Error de conexión con el servidor.';
         } finally {
             btn.disabled = false;
-            btn.textContent = 'Send Message';
+            btn.textContent = 'Enviar Notificación';
         }
     });
 </script>
