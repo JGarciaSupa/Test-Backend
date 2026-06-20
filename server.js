@@ -23,12 +23,20 @@ app.post('/login', (req, res) => {
         return res.status(200).json({
             status: 'success',
             message: 'Login exitoso',
-            token: 'fake-jwt-token-12345'
+            success: true,
+            data: {
+                idUsuario: '123',
+                userName: user
+            },
+            error: null
         });
     } else {
         return res.status(401).json({
             status: 'error',
-            message: 'Credenciales inválidas'
+            message: 'Credenciales inválidas',
+            success: false,
+            data: null,
+            error: 'Unauthorized'
         });
     }
 });
