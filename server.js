@@ -65,7 +65,7 @@ app.post('/login', (req, res) => {
     if (user === 'admin' && pass === 'admin') {
         // Generamos un UUID único para cada conexión/dispositivo
         const uniqueId = crypto.randomUUID();
-        
+
         return res.status(200).json({
             status: 'success',
             message: 'Login exitoso',
@@ -104,7 +104,10 @@ app.post('/send-message', async (req, res) => {
             title: title,
             body: body
         },
-        topic: 'global' // Envía a todos los dispositivos suscritos a este tema
+        topic: 'global',
+        android: {
+            priority: 'high' // <-- Despierta la app en segundo plano
+        }
     };
 
     try {
@@ -158,7 +161,10 @@ app.post('/send-to-user', async (req, res) => {
 
     const message = {
         notification: { title, body },
-        token: token // Enviamos al token específico guardado
+        token: token, // Enviamos al token específico guardado
+        android: {
+            priority: 'high' // <-- Despierta la app en segundo plano
+        }
     };
 
     try {
