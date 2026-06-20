@@ -108,7 +108,7 @@ app.post('/send-message', async (req, res) => {
 // RECIBIR TOKEN FCM DEL DISPOSITIVO (Targeted Notifications)
 // Android llamará aquí justo después del login
 app.post('/update-fcm-token', (req, res) => {
-    const { userId, token } = req.query; // Recibimos por QueryParams según el Retrofit actual
+    const { userId, token } = req.body; // Recibimos por Body (UpdateFcmTokenRequestDTO)
 
     if (!userId || !token) {
         return res.status(400).json({ 
