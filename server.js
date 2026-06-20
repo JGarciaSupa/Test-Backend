@@ -111,14 +111,26 @@ app.post('/update-fcm-token', (req, res) => {
     const { userId, token } = req.query; // Recibimos por QueryParams según el Retrofit actual
 
     if (!userId || !token) {
-        return res.status(400).json({ status: 'error', message: 'Falta userId o token' });
+        return res.status(400).json({ 
+            status: 'error', 
+            message: 'Falta userId o token',
+            success: false,
+            data: null,
+            error: 'Missing query parameters'
+        });
     }
 
     // Guardamos el token asociado al usuario
     userTokens[userId] = token;
     console.log(`📱 Token actualizado para usuario ${userId}: ${token.substring(0, 10)}...`);
 
-    res.status(200).json({ status: 'success', message: 'Token guardado en servidor' });
+    return res.status(200).json({ 
+        status: 'success', 
+        message: 'Token guardado en servidor',
+        success: true,
+        data: null,
+        error: null
+    });
 });
 
 // ENVIAR MENSAJE A UN USUARIO ESPECÍFICO
