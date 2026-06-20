@@ -4,6 +4,7 @@ const cors = require('cors');
 const { initializeApp, cert } = require('firebase-admin/app');
 const { getMessaging } = require('firebase-admin/messaging');
 const fs = require('fs');
+const crypto = require('crypto');
 
 let firebaseInitialized = false;
 try {
@@ -62,12 +63,15 @@ app.post('/login', (req, res) => {
     const { user, pass } = req.body;
 
     if (user === 'admin' && pass === 'admin') {
+        // Generamos un UUID único para cada conexión/dispositivo
+        const uniqueId = crypto.randomUUID();
+        
         return res.status(200).json({
             status: 'success',
             message: 'Login exitoso',
             success: true,
             data: {
-                idUsuario: '123',
+                idUsuario: uniqueId,
                 userName: user
             },
             error: null
@@ -119,8 +123,8 @@ app.post('/update-fcm-token', (req, res) => {
     const { userId, token } = req.body; // Recibimos por Body (UpdateFcmTokenRequestDTO)
 
     if (!userId || !token) {
-        return res.status(400).json({ 
-            status: 'error', 
+        return res.status(400).json({
+            status: 'error',
             message: 'Falta userId o token',
             success: false,
             data: null,
@@ -132,8 +136,8 @@ app.post('/update-fcm-token', (req, res) => {
     userTokens[userId] = token;
     console.log(`📱 Token actualizado para usuario ${userId}: ${token.substring(0, 10)}...`);
 
-    return res.status(200).json({ 
-        status: 'success', 
+    return res.status(200).json({
+        status: 'success',
         message: 'Token guardado en servidor',
         success: true,
         data: null,
